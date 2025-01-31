@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz & Pixel Art Site</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        .main-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: rgba(0, 123, 255, 0.9);
+            color: white;
+        }
+
+        .main-menu button {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 18px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .main-menu button:hover {
+            background-color: #003f7f;
+        }
+
+        .content {
+            display: none;
+            padding: 20px;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin: 10px 0;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Add styles for card games */
+        #blackjackTable,
+        #pokerTable {
+            margin-top: 20px;
+        }
+
+        .card {
+            width: 60px;
+            height: 90px;
+            border: 1px solid #000;
+            margin: 5px;
+            display: inline-block;
+            text-align: center;
+            line-height: 90px;
+            font-size: 24px;
+            background-color: white;
+        }
+
+        .hand {
+            margin: 10px 0;
+        }
+
+        .community-cards {
+            margin: 10px 0;
+        }
+
+        .betting {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-menu" id="mainMenu">
+        <h1>Welcome to the Quiz & Pixel Art Site</h1>
+        <button onclick="openTab('quiz')">Go to Quiz</button>
+        <button onclick="openTab('pixel-art')">Go to Pixel Art</button>
+        <button onclick="openTab('gallery')">Go to Gallery</button>
+        <button onclick="openTab('settings')">Go to Settings</button>
+        <button onclick="openTab('card-games')">Go to Card Games</button>
+    </div>
+
+    <div id="quiz" class="content">
+        <h1>Quiz</h1>
+        <form id="quizForm"></form>
+        <button type="button" id="submitButton" onclick="evaluateQuiz()">Submit</button>
+        <button type="button" onclick="saveQuizProgress()">Save Quiz Progress</button>
+        <button type="button" onclick="loadQuizProgress()">Load Quiz Progress</button>
+        <div id="result"></div>
+    </div>
+
+    <div id="pixel-art" class="content">
+        <h1>Pixel Art</h1>
+        <p>Click on the squares to create your pixel art!</p>
+        <div class="color-picker">
+            <button style="background-color: black;" onclick="setCurrentColor('black')"></button>
+            <button style="background-color: red;" onclick="setCurrentColor('red')"></button>
+            <button style="background-color: blue;" onclick="setCurrentColor('blue')"></button>
+            <button style="background-color: green;" onclick="setCurrentColor('green')"></button>
+            <button style="background-color: yellow;" onclick="setCurrentColor('yellow')"></button>
+        </div>
+        <div id="pixelArtCanvas"></div>
+        <button onclick="savePixelArt()">Save Pixel Art</button>
+        <button onclick="loadPixelArt()">Load Pixel Art</button>
+        <button onclick="undo()">Undo</button>
+        <button onclick="redo()">Redo</button>
+    </div>
+
+    <div id="gallery" class="content">
+        <h1>Gallery</h1>
+        <p>Here you can view your saved pixel art creations:</p>
+        <div id="savedArtGallery"></div>
+    </div>
+
+    <div id="settings" class="content">
+        <h1>Settings</h1>
+        <p>Customize your experience:</p>
+        <label for="theme">Select Theme:</label>
+        <select id="theme" onchange="changeTheme()">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+        </select>
+        <div id="backgroundSettings">
+            <h2>Background Settings</h2>
+            <div id="backgroundDropzone">
+                <p>Drag and drop a file here to set it as the background:</p>
+            </div>
+            <div id="advancedMode">
+                <input type="checkbox" id="advancedCheckbox" onchange="toggleAdvancedMode()"> Enable Advanced Mode (Cycle through multiple images)
+                <div id="advancedSettings" style="display: none;">
+                    <h3>Advanced Settings</h3>
+                    <label for="imageInput">Select Images:</label>
+                    <input type="file" id="imageInput" multiple accept="image/*">
+                    <button type="button" onclick="storeImages()">Store Images</button>
+                    <button type="button" onclick="startImageCycle()">Start Image Cycle</button>
+                    <label for="interval">Image Interval (in seconds):</label>
+                    <input type="number" id="interval" min="1" value="5">
+                </div>
+            </div>
+        </div>
+        <button onclick="resetSettings()">Reset to Default</button>
+    </div>
+
+    <div id="card-games" class="content">
+        <h1>Card Games</h1>
+        <h2>Blackjack</h2>
+        <div id="blackjackTable">
+            <input type="number" id="betAmount" placeholder="Enter Bet Amount" min="1" />
+            <button onclick="startBlackjack()">Start Blackjack Game</button>
+            <div id="blackjackOutput"></div>
+            <div class="hand" id="blackjackPlayerHand"></div>
+            <div class="hand" id="blackjackDealerHand"></div>
+            <button id="hitButton" onclick="hit()" disabled>Hit</button>
+            <button id="standButton" onclick="stand()" disabled>Stand</button>
+            <button id="splitButton" onclick="split()" disabled>Split</button>
+        </div>
+        <h2>Poker</h2>
+        <div id="pokerTable">
+            <button onclick="startPoker()">Start Poker Game</button>
+            <div id="pokerOutput"></div>
+            <div class="hand" id="pokerPlayerHand"></div>
+            <div class="community-cards" id="communityCards"></div>
+            <button id="dealButton" onclick="deal()" disabled>Deal</button>
+            <button id="foldButton" onclick="fold()" disabled>Fold</button>
+        </div>
+    </div>
+
+    <script>
+        let currentColor = 'black';
+        let undoStack = [];
+        let redoStack = [];
+        let imageCycleInterval;
+        let storedImages = []; // Array to store image URLs
+        let deck = [];
+        let playerHand = [];
+        let dealerHand = [];
+        let communityCards = [];
+        let playerBet = 0;
+
+        function setCurrentColor(color) {
+            currentColor = color;
+        }
+
+        function openTab(tabId) {
+            const contents = document.querySelectorAll('.content');
+            contents.forEach(content => content.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            if (tabId === 'pixel-art') {
+                createPixelArtCanvas();
+            }
+        }
+
+        const quizQuestions = [
+            { question: "Which organ in the human body regenerates itself?", options: ["Liver", "Heart", "Lung", "Kidney"], answer: "a" },
+            { question: "What is the lightest element on the periodic table?", options: ["Hydrogen", "Helium", "Lithium", "Beryllium"], answer: "a" },
+            { question: "Which country has the world's oldest parliament still in existence?", options: ["Iceland", "United Kingdom", "Switzerland", "France"], answer: "a" },
+            { question: "What is the term for a word or phrase that reads the same backward and forward?", options: ["Anagram", "Palindrome", "Homonym", "Oxymoron"], answer: "b" },
+            { question: "What is the primary ingredient in guacamole?", options: ["Avocado", "Tomato", "Onion", "Lime"], answer: "a" },
+            { question: "What is the rare phenomenon of animals being born from eggs inside the mother's body called?", options: ["Oviparous", "Ovoviviparous", "Viviparous", "Monotremes"], answer: "b" },
+            { question: "Which ancient city is famously associated with the hanging gardens?", options: ["Babylon", "Athens", "Rome", "Alexandria"], answer: "a" },
+            { question: "What is the smallest unit of life in an organism?", options: ["Atom", "Molecule", "Cell", "Tissue"], answer: "c" },
+            { question: "Which artist is known for the painting 'The Starry Night'?", options: ["Vincent van Gogh", "Claude Monet", "Pablo Picasso", "Leonardo da Vinci"], answer: "a" },
+            { question: "What is the term for a baby kangaroo?", options: ["Joey", "Cub", "Pup", "Fawn"], answer: "a" },
+            { question: "Which is the only U.S. state that begins with the letter 'P'?", options: ["Pennsylvania", "Pacific", "Pinewood", "Peachtree"], answer: "a" },
+            { question: "What is the name of the element with the chemical symbol 'K'?", options: ["Potassium", "Krypton", "Calcium", "Copper"], answer: "a" },
+            { question: "Which river is the longest in the world?", options: ["Amazon", "Nile", "Yangtze", "Mississippi"], answer: "b" },
+            { question: "What is the name of the first artificial satellite launched into space?", options: ["Sputnik 1", "Explorer 1", "Luna 2", "Vostok 1"], answer: "a" },
+            { question: "Which part of the plant conducts photosynthesis?", options: ["Leaf", "Root", "Stem", "Flower"], answer: "a" },
+            { question: "What is the main gas in the bubbles of sparkling water?", options: ["Carbon Dioxide", "Oxygen", "Nitrogen", "Helium"], answer: "a" },
+            { question: "Which desert is the largest in the world?", options: ["Sahara", "Gobi", "Antarctic", "Arctic"], answer: "c" },
+            { question: "Which ocean is the largest on Earth?", options: ["Pacific Ocean", "Atlantic Ocean", "Indian Ocean", "Southern Ocean"], answer: "a" },
+            { question: "Which two colors make up the flag of Poland?", options: ["Red and White", "Blue and White", "Green and White", "Black and White"], answer: "a" },
+            { question: "What is the chemical process plants use to convert sunlight into energy?", options: ["Photosynthesis", "Respiration", "Fermentation", "Transpiration"], answer: "a" },
+            { question: "What is the only mammal capable of true sustained flight?", options: ["Bat", "Flying Squirrel", "Sugar Glider", "Colugo"], answer: "a" },
+            { question: "Which mineral is the main component of sand?", options: ["Quartz", "Feldspar", "Calcite", "Gypsum"], answer: "a" },
+            { question: "What is the main ingredient in the traditional Japanese drink sake?", options: ["Rice", "Barley", "Wheat", "Corn"], answer: "a" },
+            { question: "Which country has the highest number of UNESCO World Heritage Sites?", options: ["Italy", "China", "India", "France"], answer: "a" },
+            { question: "What is the term for the fear of long words?", options: ["Arachibutyrophobia", "Hippopotomonstrosesquipedaliophobia", "Nomophobia", "Glossophobia"], answer: "b" },
+            { question: "Which ancient civilization is known for building Machu Picchu?", options: ["Inca", "Maya", "Aztec", "Olmec"], answer: "a" },
+            { question: "What is the term for molten rock beneath the Earth's surface?", options: ["Magma", "Lava", "Basalt", "Pumice"], answer: "a" },
+            { question: "Which language is considered the oldest written language still in use?", options: ["Hebrew", "Sanskrit", "Chinese", "Greek"], answer: "b" },
+            { question: "What is the rarest blood type in the world?", options: ["AB-", "O-", "B-", "A-"], answer: "a" },
+            { question: "Which planet has the most moons in the Solar System?", options: ["Jupiter", "Saturn", "Neptune", "Uranus"], answer: "b" },
+            { question: "What is the chemical symbol for gold?", options: ["Au", "Ag", "Pb", "Fe"], answer: "a" },
+            { question: "Which is the only continent without native reptiles or amphibians?", options: ["Antarctica", "Europe", "Asia", "North America"], answer: "a" },
+            { question: "What is the name of the deepest part of the world's oceans?", options: ["Mariana Trench", "Tonga Trench", "Java Trench", "Puerto Rico Trench"], answer: "a" },
+            { question: "Which musical instrument has keys, pedals, and strings?", options: ["Piano", "Harp", "Guitar", "Accordion"], answer: "a" },
+            { question: "Who wrote the famous play 'Hamlet'?", options: ["William Shakespeare", "Christopher Marlowe", "Ben Jonson", "Thomas Kyd"], answer: "a" },
+            { question: "Which country is known as the Land of the Rising Sun?", options: ["Japan", "Thailand", "South Korea", "Vietnam"], answer: "a" },
+            { question: "What is the smallest planet in our Solar System?", options: ["Mercury", "Mars", "Venus", "Pluto"], answer: "a" },
+            { question: "Which chemical element is essential for the production of hemoglobin?", options: ["Iron", "Calcium", "Potassium", "Magnesium"], answer: "a" },
+            { question: "What type of galaxy is the Milky Way?", options: ["Spiral", "Elliptical", "Irregular", "Lenticular"], answer: "a" },
+            { question: "What is the mathematical term for a number's distance from zero on a number line?", options: ["Absolute Value", "Exponent", "Factorial", "Coefficient"], answer: "a" },
+            { question: "Which country has the most natural lakes in the world?", options: ["Canada", "Brazil", "Russia", "United States"], answer: "a" },
+            { question: "What is the only metal that is liquid at room temperature?", options: ["Mercury", "Gallium", "Cesium", "Sodium"], answer: "a" },
+            { question: "What is the most abundant gas in Earth's atmosphere?", options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Argon"], answer: "b" },
+            { question: "Who painted the ceiling of the Sistine Chapel?", options: ["Michelangelo", "Leonardo da Vinci", "Raphael", "Caravaggio"], answer: "a" },
+            { question: "What is the capital of Australia?", options: ["Sydney", "Melbourne", "Canberra", "Perth"], answer: "c" },
+            { question: "What is the hardest natural substance on Earth?", options: ["Steel", "Diamond", "Quartz", "Corundum"], answer: "b" },
+            { question: "What is the chemical formula for table salt?", options: ["NaCl", "KCl", "MgCl", "CaCl"], answer: "a" },
+            { question: "Who developed the theory of general relativity?", options: ["Isaac Newton", "Albert Einstein", "Niels Bohr", "Galileo Galilei"], answer: "b" },
+            { question: "Which planet is known as the 'Red Planet'?", options: ["Mars", "Venus", "Mercury", "Jupiter"], answer: "a" },
+            { question: "What organ in the human body is responsible for producing insulin?", options: ["Liver", "Pancreas", "Kidneys", "Gallbladder"], answer: "b" },
+            { question: "What is the smallest bone in the human body?", options: ["Femur", "Stapes", "Radius", "Humerus"], answer: "b" },
+            { question: "Which element on the periodic table has the atomic number 1?", options: ["Helium", "Oxygen", "Hydrogen", "Carbon"], answer: "c" },
+            { question: "Which country has the longest coastline in the world?", options: ["Russia", "Australia", "Canada", "Indonesia"], answer: "c" },
+            { question: "What is the powerhouse of the cell?", options: ["Nucleus", "Mitochondria", "Ribosome", "Golgi apparatus"], answer: "b" },
+            { question: "What is the freezing point of water on the Fahrenheit scale?", options: ["32°F", "0°F", "212°F", "100°F"], answer: "a" },
+            { question: "Which bird is the fastest in a dive?", options: ["Golden Eagle", "Peregrine Falcon", "Bald Eagle", "Hawk"], answer: "b" },
+            { question: "What is the term for an animal that eats both plants and animals?", options: ["Carnivore", "Herbivore", "Omnivore", "Detritivore"], answer: "c" },
+            { question: "What is the tallest mountain in the world?", options: ["Mount Everest", "K2", "Kangchenjunga", "Mount Kilimanjaro"], answer: "a" },
+            { question: "Which part of the brain controls balance and coordination?", options: ["Cerebrum", "Cerebellum", "Brainstem", "Hypothalamus"], answer: "b" },
+            { question: "What is the most populous country in the world?", options: ["India", "United States", "China", "Indonesia"], answer: "c" },
+            { question: "In 'Minecraft', what tool is required to mine diamonds?", options: ["Wooden Pickaxe", "Iron Pickaxe", "Stone Pickaxe", "Diamond Pickaxe"], answer: "b" },
+            { question: "In 'Fortnite', what is the maximum building height?", options: ["100", "300", "500", "999"], answer: "d" },
+            { question: "In 'Overwatch', which character has the ultimate ability 'Dragonblade'?", options: ["Genji", "Hanzo", "Reaper", "Winston"], answer: "a" },
+            { question: "In 'The Legend of Zelda: Breath of the Wild', which item is required to break through certain rock barriers?", options: ["Bombs", "Fire Arrows", "Magnesis", "Hammer"], answer: "a" },
+            { question: "In 'Super Smash Bros. Ultimate', what is the maximum number of players in a match?", options: ["4", "8", "10", "12"], answer: "b" },
+            { question: "In 'Dark Souls', which item is used to restore health during combat?", options: ["Estus Flask", "Life Gem", "Humanity", "Soul Vial"], answer: "a" },
+            { question: "In 'Rocket League', how many players are on each team?", options: ["1", "2", "3", "4"], answer: "c" },
+            { question: "In 'League of Legends', what is the role of a champion that specializes in building tank items and engaging in team fights?", options: ["Support", "Jungler", "Top Lane", "Tank"], answer: "d" },
+            { question: "In 'Apex Legends', which character has the ability 'Dome of Protection'?", options: ["Gibraltar", "Wraith", "Bloodhound", "Pathfinder"], answer: "a" },
+            { question: "In 'World of Warcraft', which class can turn into a cat, owl, or bear?", options: ["Hunter", "Warlock", "Druid", "Rogue"], answer: "c" },
+            { question: "In 'Celeste', how many frames does a successful wavedash last before you lose momentum?", options: ["7", "9", "11", "13"], answer: "b" },
+            { question: "In 'Hollow Knight', which secret boss is accessed through a hidden stag station?", options: ["Lost Kin", "White Defender", "Grey Prince Zote", "Radiance"], answer: "b" },
+            { question: "In 'Undertale', which character has a weapon that deals more damage when swung at a specific rhythm?", options: ["Sans", "Undyne", "Mettaton", "Asgore"], answer: "c" },
+            { question: "In 'Minecraft', how many blocks does a fully powered beacon's base require?", options: ["164", "216", "196", "200"], answer: "a" },
+            { question: "In 'Breath of the Wild', what unique feature distinguishes the Lynel located at Ploymus Mountain?", options: ["It regenerates health", "It uses a two-handed sword", "It's part of a main quest", "It has a blue mane"], answer: "c" },
+            { question: "In 'Dark Souls 3', what happens if you ring the bell in Archdragon Peak?", options: ["Unlock a new area", "Trigger a boss fight", "Get an item drop", "Nothing happens"], answer: "b" },
+            { question: "In 'The Legend of Zelda: Majora's Mask', which mask gives you the ability to detect hidden holes in the ground?", options: ["Lens of Truth", "Stone Mask", "Mask of Scents", "Goron Mask"], answer: "c" },
+            { question: "In 'Stardew Valley', how many levels does the Skull Cavern have before reaching the bottom?", options: ["50", "100", "It's infinite", "It loops after 120"], answer: "c" },
+            { question: "In 'League of Legends', what passive ability allows champions to become invisible in bushes?", options: ["Stealth Tread", "Camouflage Mastery", "Brushwalker", "Adaptive Vision"], answer: "c" },
+            { question: "In 'Elden Ring', which item allows you to reset your stats and respec?", options: ["Larval Tear", "Golden Seed", "Rune Arc", "Tears of Grace"], answer: "a" },
+            { question: "In 'Stardew Valley', what is the purpose of the Magic Rock Candy item?", options: ["Heals instantly", "Gives a luck boost", "Unlocks a secret area", "Increases mining power"], answer: "b" },
+            { question: "In 'Stardew Valley', which villager has a birthday on Winter 17?", options: ["Harvey", "Evelyn", "Krobus", "Clint"], answer: "c" },
+            { question: "What is the only mammal capable of true sustained flight?", options: ["Flying squirrel", "Fruit bat", "Vampire bat", "Eagle"], answer: "b" },
+            { question: "Which chemical element has the highest melting point?", options: ["Iron", "Tungsten", "Carbon", "Platinum"], answer: "b" },
+            { question: "What is the term for a group of crows?", options: ["Murder", "Herd", "Flock", "Mob"], answer: "a" },
+            { question: "Which planet rotates on its side, relative to its orbit?", options: ["Venus", "Mars", "Uranus", "Neptune"], answer: "c" },
+            { question: "What unique property does water have when it freezes?", options: ["It contracts", "It expands", "It releases oxygen", "It loses mass"], answer: "b" },
+            { question: "What is the smallest prime number greater than 50?", options: ["53", "59", "61", "67"], answer: "a" },
+            { question: "What natural number has the most divisors under 100?", options: ["60", "72", "84", "96"], answer: "c" },
+            { question: "What is the main ingredient of the dish 'mole poblano'?", options: ["Chocolate", "Tomatoes", "Peppers", "Avocado"], answer: "a" },
+            { question: "In 'Animal Crossing: New Horizons', what is the main currency?", options: ["Poki", "Cattios", "Bells", "Silvers"], answer: "c" },
+            { question: "In 'The Witcher 3', what is Geralt's signature weapon?", options: ["Sword of Dawn", "Steel Sword", "Silver Sword", "Witcher Blade"], answer: "c" },
+            { question: "In 'Minecraft', how do you tame a horse?", options: ["Feed it wheat", "Ride it until it loves you", "Give it apples", "Feed it hay"], answer: "b" },
+            { question: "In 'Call of Duty: Warzone', what is the main method of respawning a teammate?", options: ["Supply Drop", "Self-Revive Kit", "Buy Station", "Spawn Beacon"], answer: "c" },
+            { question: "In 'Animal Crossing: New Horizons', what is the primary way to make money?", options: ["Catching fish", "Selling fruits", "Selling turnips", "Crafting items"], answer: "c" },
+            { question: "In 'Hollow Knight', which item is used to heal yourself?", options: ["Soul Vessel", "Flask of Essence", "Focus", "Health Shard"], answer: "c" },
+            { question: "In 'Fortnite', what material is used to build ramps?", options: ["Wood", "Stone", "Metal", "All of the above"], answer: "d" },
+            { question: "In 'Minecraft', what do you need to make a cake?", options: ["Wheat, sugar, milk, eggs", "Wheat, sugar, eggs, sweet berries", "Wheat, sugar, butter, milk", "Sugar, eggs, milk, flower"], answer: "a" },
+            { question: "In 'Pokemon Sword and Shield', which new feature was introduced for battles?", options: ["Mega Evolution", "Dynamaxing", "Z-Moves", "Battle Royale"], answer: "b" },
+            { question: "In 'Super Mario Odyssey', what is the name of Mario's hat that he uses to possess other creatures?", options: ["Cappy", "Capo", "Hatty", "Mario's Crown"], answer: "a" },
+            { question: "In 'Rocket League', what is the name of the default arena?", options: ["The Arena", "Stadium", "The Pitch", "DFH Stadium"], answer: "d" },
+            { question: "In 'Celeste', which item temporarily extends your dash count?", options: ["Strawberry", "Golden Heart", "Feather", "Crystal Shard"], answer: "c" },
+            { question: "What is the chemical process used in plants to convert sunlight into chemical energy?", options: ["Phototropism", "Photosynthesis", "Photolysis", "Chemiosmosis"], answer: "b" },
+            { question: "What year did the Apollo 11 mission land on the moon?", options: ["1967", "1968", "1969", "1970"], answer: "c" },
+            { question: "Which mathematical theorem proves the sum of the angles in a triangle equals 180 degrees?", options: ["Pythagorean Theorem", "Triangle Sum Theorem", "Law of Cosines", "Euler's Theorem"], answer: "b" },
+            { question: "In 'The Elder Scrolls V: Skyrim', what is the name of the potion that fortifies lockpicking?", options: ["Locksmith's Tonic", "Fortify Lockpicking", "Thief's Essence", "Potion of Dexterity"], answer: "b" },
+            { question: "What is the only type of rock that can float on water?", options: ["Pumice", "Granite", "Limestone", "Slate"], answer: "a" },
+            { question: "Which element is most abundant in the Earth's crust?", options: ["Oxygen", "Silicon", "Aluminum", "Iron"], answer: "a" },
+            { question: "Which bird is known for its ability to mimic human speech?", options: ["Crow", "Parrot", "Raven", "Magpie"], answer: "b" },
+            { question: "What is the only number that is spelled with letters in alphabetical order?", options: ["Forty", "Eighty", "One", "Three"], answer: "a" },
+            { question: "What type of galaxy is the Milky Way?", options: ["Elliptical", "Spiral", "Irregular", "Barred Spiral"], answer: "d" },
+            { question: "What is the chemical symbol for the element with the highest density?", options: ["Au", "Ir", "Pt", "Pb"], answer: "b" },
+            { question: "Which ancient civilization built Machu Picchu?", options: ["Mayan", "Aztec", "Incan", "Olmec"], answer: "c" },
+            { question: "What is the common name for the Aurora Borealis?", options: ["Northern Lights", "Polar Glow", "Icelandic Glow", "Winter Shine"], answer: "a" },
+            { question: "What is the term for animals that are active at dawn and dusk?", options: ["Nocturnal", "Diurnal", "Crepuscular", "Cathemeral"], answer: "c" },
+            { question: "What is the approximate age of the universe in billion years?", options: ["10", "13.8", "15", "20"], answer: "b" },
+            { question: "What is the name of the only human disease to have been eradicated worldwide?", options: ["Smallpox", "Polio", "Measles", "Tuberculosis"], answer: "a" },
+            { question: "Which mathematician is known for the unsolved conjecture stating that every even number greater than 2 is the sum of two primes?", options: ["Christian Goldbach", "Leonhard Euler", "Carl Friedrich Gauss", "Pierre-Simon Laplace"], answer: "a" },
+            { question: "What is the term for the hypothetical state of matter that makes up approximately 85% of the universe’s total mass?", options: ["Dark Matter", "Antimatter", "Baryonic Matter", "Quark Matter"], answer: "a" },
+            { question: "Which island is the largest in the Mediterranean Sea?", options: ["Sicily", "Crete", "Cyprus", "Sardinia"], answer: "a" }
+        ];
+
+        function generateQuiz() {
+            const quizForm = document.getElementById('quizForm');
+            quizForm.innerHTML = '';
+            quizQuestions.forEach((q, index) => {
+                const div = document.createElement('div');
+                div.innerHTML = `<p>${q.question}</p>`;
+                q.options.forEach((opt, i) => {
+                    div.innerHTML += `
+                        <input type="radio" name="q${index}" value="${String.fromCharCode(97 + i)}"> ${opt}<br>
+                    `;
+                });
+                quizForm.appendChild(div);
+            });
+        }
+
+        function evaluateQuiz() {
+            let score = 0;
+            quizQuestions.forEach((q, index) => {
+                const answer = document.querySelector(`input[name="q${index}"]:checked`);
+                if (answer && answer.value === q.answer) score++;
+            });
+            document.getElementById('result').innerText = `Your score is ${score}/${quizQuestions.length}`;
+        }
+
+        function saveQuizProgress() {
+            const answers = [];
+            quizQuestions.forEach((_, index) => {
+                const answer = document.querySelector(`input[name="q${index}"]:checked`);
+                answers.push(answer ? answer.value : null);
+            });
+            localStorage.setItem('quizProgress', JSON.stringify(answers));
+            alert("Quiz progress saved!");
+        }
+
+        function loadQuizProgress() {
+            const savedAnswers = JSON.parse(localStorage.getItem('quizProgress'));
+            if (!savedAnswers) {
+                alert("No saved progress found!");
+                return;
+            }
+            savedAnswers.forEach((answer, index) => {
+                if (answer) {
+                    document.querySelector(`input[name="q${index}"][value="${answer}"]`).checked = true;
+                }
+            });
+            alert("Quiz progress loaded!");
+        }
+
+        function createPixelArtCanvas() {
+            const canvas = document.getElementById('pixelArtCanvas');
+            canvas.innerHTML = '';
+            for (let i = 0; i < 256; i++) {
+                const div = document.createElement('div');
+                div.classList.add('pixel');
+                div.addEventListener('click', () => {
+                    undoStack.push(canvas.innerHTML);
+                    redoStack = [];
+                    div.style.backgroundColor = currentColor;
+                });
+                canvas.appendChild(div);
+            }
+        }
+
+        function savePixelArt() {
+            const pixelData = Array.from(document.querySelectorAll('.pixel')).map(pixel => pixel.style.backgroundColor);
+            const name = prompt("Enter a name for your pixel art:");
+            if (name) {
+                localStorage.setItem(name, JSON.stringify(pixelData));
+                alert("Pixel art saved!");
+                displaySavedArt(name, pixelData);
+            }
+        }
+
+        function displaySavedArt(name, pixelData) {
+            const gallery = document.getElementById('savedArtGallery');
+            const canvas = document.createElement('canvas');
+            canvas.width = 320;
+            canvas.height = 320;
+            const ctx = canvas.getContext('2d');
+            const size = 20;
+
+            pixelData.forEach((color, index) => {
+                const x = (index % 16) * size;
+                const y = Math.floor(index / 16) * size;
+                ctx.fillStyle = color || 'white';
+                ctx.fillRect(x, y, size, size);
+            });
+
+            const item = document.createElement('div');
+            item.classList.add('gallery-item');
+            item.appendChild(canvas);
+            const artName = document.createElement('p');
+            artName.innerText = name;
+            item.appendChild(artName);
+            gallery.appendChild(item);
+        }
+
+        function loadPixelArt() {
+            const name = prompt("Enter the name of the pixel art you want to load:");
+            const pixelData = JSON.parse(localStorage.getItem(name));
+            if (!pixelData) {
+                alert("No saved pixel art found!");
+                return;
+            }
+            document.querySelectorAll('.pixel').forEach((pixel, index) => {
+                pixel.style.backgroundColor = pixelData[index] || 'white';
+            });
+            alert("Pixel art loaded!");
+        }
+
+        function undo() {
+            if (undoStack.length > 0) {
+                redoStack.push(document.getElementById('pixelArtCanvas').innerHTML);
+                const previousState = undoStack.pop();
+                document.getElementById('pixelArtCanvas').innerHTML = previousState;
+            } else {
+                alert("No actions to undo!");
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                undoStack.push(document.getElementById('pixelArtCanvas').innerHTML);
+                const nextState = redoStack.pop();
+                document.getElementById('pixelArtCanvas').innerHTML = nextState;
+            } else {
+                alert("No actions to redo!");
+            }
+        }
+
+        function changeTheme() {
+            const theme = document.getElementById('theme').value;
+            document.body.style.backgroundColor = theme === 'dark' ? '#333' : '#f0f0f0';
+            document.body.style.color = theme === 'dark' ? 'white' : 'black';
+        }
+
+        function toggleAdvancedMode() {
+            const checkbox = document.getElementById('advancedCheckbox');
+            const advancedSettings = document.getElementById('advancedSettings');
+            advancedSettings.style.display = checkbox.checked ? 'block' : 'none';
+        }
+
+        function storeImages() {
+            const imageInput = document.getElementById('imageInput');
+            const files = Array.from(imageInput.files);
+            if (storedImages.length + files.length > 50) {
+                alert("You can only store up to 50 images.");
+                return;
+            }
+            files.forEach(file => {
+                const url = URL.createObjectURL(file);
+                storedImages.push(url);
+            });
+            alert(`${files.length} image(s) stored. Total stored images: ${storedImages.length}`);
+        }
+
+        // Blackjack game functions
+        function startBlackjack() {
+            deck = createDeck();
+            shuffleDeck(deck);
+            playerHand = [drawCard(), drawCard()];
+            dealerHand = [drawCard(), drawCard()];
+            displayHands();
+            document.getElementById('blackjackOutput').innerHTML = 'Game started! Place your bet.';
+            document.getElementById('hitButton').disabled = false;
+            document.getElementById('standButton').disabled = false;
+            document.getElementById('splitButton').disabled = false;
+        }
+
+        function createDeck() {
+            const suits = ['♥', '♦', '♣', '♠'];
+            const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+            const deck = [];
+            for (let suit of suits) {
+                for (let value of values) {
+                    deck.push({ value, suit });
+                }
+            }
+            return deck;
+        }
+
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+        }
+
+        function drawCard() {
+            return deck.pop();
+        }
+
+        function displayHands() {
+            const playerHandDiv = document.getElementById('blackjackPlayerHand');
+            const dealerHandDiv = document.getElementById('blackjackDealerHand');
+            playerHandDiv.innerHTML = 'Your Hand: ' + playerHand.map(card => card.value + card.suit).join(', ');
+            dealerHandDiv.innerHTML = 'Dealer\'s Hand: ' + dealerHand[0].value + dealerHand[0].suit + ', ?';
+        }
+
+        function calculateScore(hand) {
+            let score = 0;
+            let aces = 0;
+            for (let card of hand) {
+                if (['J', 'Q', 'K'].includes(card.value)) {
+                    score += 10;
+                } else if (card.value === 'A') {
+                    aces++;
+                    score += 11; // Initially count Ace as 11
+                } else {
+                    score += parseInt(card.value);
+                }
+            }
+            // Adjust for Aces
+            while (score > 21 && aces > 0) {
+                score -= 10;
+                aces--;
+            }
+            return score;
+        }
+
+        function hit() {
+            playerHand.push(drawCard());
+            const score = calculateScore(playerHand);
+            displayHands();
+            if (score > 21) {
+                alert("Busted! Your score: " + score);
+                endBlackjack(); // End game on bust
+            } else {
+                document.getElementById('blackjackOutput').innerHTML = 'Your score: ' + score;
+            }
+        }
+
+        function stand() {
+            const playerScore = calculateScore(playerHand);
+            let dealerScore = calculateScore(dealerHand);
+            while (dealerScore < 17) {
+                dealerHand.push(drawCard());
+                dealerScore = calculateScore(dealerHand);
+            }
+            displayHands();
+            document.getElementById('blackjackOutput').innerHTML = 'Your score: ' + playerScore + '<br> Dealer\'s score: ' + dealerScore;
+            determineWinner(playerScore, dealerScore);
+            endBlackjack(); // End game after standing
+        }
+
+        function determineWinner(playerScore, dealerScore) {
+            if (dealerScore > 21) {
+                alert("Dealer busts! You win!");
+            } else if (dealerScore > playerScore) {
+                alert("Dealer wins with score: " + dealerScore);
+            } else if (dealerScore < playerScore) {
+                alert("You win with score: " + playerScore);
+            } else {
+                alert("It's a tie!");
+            }
+        }
+
+        function endBlackjack() {
+            document.getElementById('hitButton').disabled = true;
+            document.getElementById('standButton').disabled = true;
+            document.getElementById('splitButton').disabled = true;
+            // Restart the game after a brief delay
+            setTimeout(startBlackjack, 2000);
+        }
+
+        function split() {
+            if (playerHand.length === 2 && playerHand[0].value === playerHand[1].value) {
+                let firstHand = [playerHand[0], drawCard()];
+                let secondHand = [playerHand[1], drawCard()];
+                playerHand = firstHand; // Start with the first hand
+                displayHands();
+                alert("You have split your cards! Play each hand separately.");
+                // Implement further logic for playing each hand...
+            } else {
+                alert("You can only split if you have a pair.");
+            }
+        }
+
+        // Poker game functions
+        function startPoker() {
+            deck = createDeck();
+            shuffleDeck(deck);
+            playerHand = [drawCard(), drawCard()]; // 2 cards for player
+            communityCards = []; // Reset community cards
+            displayHandsPoker();
+            document.getElementById('pokerOutput').innerHTML = 'Poker game started!';
+            document.getElementById('dealButton').disabled = false;
+            document.getElementById('foldButton').disabled = false;
+        }
+
+        function displayHandsPoker() {
+            const playerHandDiv = document.getElementById('pokerPlayerHand');
+            playerHandDiv.innerHTML = 'Your Hand: ' + playerHand.map(card => card.value + card.suit).join(', ');
+        }
+
+        function displayCommunityCards() {
+            const communityCardsDiv = document.getElementById('communityCards');
+            communityCardsDiv.innerHTML = 'Community Cards: ' + communityCards.map(card => card.value + card.suit).join(', ');
+        }
+
+        function deal() {
+            // Dealing community cards (up to 3 at first)
+            if (communityCards.length < 3) {
+                communityCards.push(drawCard());
+                displayCommunityCards();
+            } else if (communityCards.length < 5) {
+                // Deal one more community card
+                communityCards.push(drawCard());
+                displayCommunityCards();
+                if (communityCards.length === 5) {
+                    evaluatePokerHand();
+                }
+            }
+        }
+
+        function fold() {
+            alert("You have folded. Game over.");
+            // Reset poker game
+            resetPokerGame();
+        }
+
+        function evaluatePokerHand() {
+            const allCards = playerHand.concat(communityCards);
+            const handType = detectHandType(allCards);
+            document.getElementById('pokerOutput').innerHTML += `<br>Your best hand: ${handType}`;
+            // Reset poker game
+            setTimeout(resetPokerGame, 3000);
+        }
+
+        function detectHandType(cards) {
+            const valueCount = {};
+            const suitCount = {};
+            cards.forEach(card => {
+                valueCount[card.value] = (valueCount[card.value] || 0) + 1;
+                suitCount[card.suit] = (suitCount[card.suit] || 0) + 1;
+            });
+
+            const values = Object.values(valueCount);
+            const isFlush = Object.keys(suitCount).length === 1;
+            const isStraight = values.length === 5 && (Math.max(...values) - Math.min(...values) === 4);
+
+            if (isFlush && isStraight) return "Straight Flush";
+            if (values.includes(4)) return "Four of a Kind";
+            if (values.includes(3) && values.includes(2)) return "Full House";
+            if (isFlush) return "Flush";
+            if (isStraight) return "Straight";
+            if (values.includes(3)) return "Three of a Kind";
+            if (values.filter(v => v === 2).length === 2) return "Two Pair";
+            if (values.includes(2)) return "One Pair";
+            return "High Card";
+        }
+
+        function resetPokerGame() {
+            document.getElementById('pokerOutput').innerHTML = '';
+            document.getElementById('pokerPlayerHand').innerHTML = '';
+            document.getElementById('communityCards').innerHTML = '';
+            document.getElementById('dealButton').disabled = true;
+            document.getElementById('foldButton').disabled = true;
+        }
+
+        // Initial setup
+        generateQuiz();
+        createPixelArtCanvas();
+    </script>
+</body>
+</html>
